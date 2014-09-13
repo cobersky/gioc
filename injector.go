@@ -95,6 +95,10 @@ func (this *injector) newInstance(typ reflect.Type, name string) reflect.Value {
 		return p.apply(this)
 	}else {
 		v := reflect.New(typ)
+		td := getTypeDescribe(typ)
+		if td.hasInitMethod {
+			td.initMethod.Func.Call([]reflect.Value{v})
+		}
 		this.injectInto(v)
 		return v
 	}
@@ -110,20 +114,18 @@ func (this *injector) getInstance(typ reflect.Type, name string) reflect.Value {
 
 func (this *injector) injectInto(val reflect.Value) {
 	fmt.Println("inject into")
+	td := getTypeDescribe(val.Type())
 	for val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	typ := val.Type()
-	td := getTypeDescribe(typ)
 	for _, v := range td.fields {
 		vField := val.FieldByIndex(v.Index)
 		if vField.CanSet() {
 			vField.Set(this.getInstance(v.Type, v.Tag.Get("inject")))
 		}
 	}
-	if td.hasInitMethod {
-		fmt.Println(td.initMethod.PkgPath)
-	}
+	fmt.Println(td)
+
 }
 
 func (this *injector) unMap(typ reflect.Type, name string) {

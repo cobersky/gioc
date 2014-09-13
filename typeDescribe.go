@@ -2,7 +2,6 @@ package gioc
 
 import (
 	"reflect"
-	"fmt"
 )
 
 type typeDescribe struct {
@@ -20,6 +19,10 @@ func getTypeDescribe(typ reflect.Type)*typeDescribe{
 }
 func createTypeDescribe(typ reflect.Type)*typeDescribe{
 	td:=&typeDescribe{}
+	td.initMethod,td.hasInitMethod=typ.MethodByName("Init")
+	for typ.Kind()==reflect.Ptr{
+		typ=typ.Elem()
+	}
 	for i:=0;i<typ.NumField();i++{
 		f:=typ.Field(i)
 		tag:=f.Tag.Get("inject")
@@ -27,7 +30,6 @@ func createTypeDescribe(typ reflect.Type)*typeDescribe{
 			td.fields=append(td.fields,f)
 		}
 	}
-	td.initMethod,td.hasInitMethod=typ.MethodByName("Init")
 	typeDescribes[typ.String()]=td
 	return td
 }

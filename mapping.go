@@ -39,7 +39,9 @@ func (this *mapping) toType(typ reflect.Type) {
 func (this *mapping) ToValue(ptr interface{}) {
 	typ := reflect.TypeOf(ptr)
 	if typ.Implements(this.typ) {
-
+		for typ.Kind()==reflect.Ptr{
+			typ=typ.Elem()
+		}
 		createTypeDescribe(typ)
 		this.injector.addProvider(this.uid, newValueProvider(reflect.ValueOf(ptr)))
 	}else {
