@@ -2,6 +2,7 @@ package gioc
 
 import (
 	"reflect"
+	"fmt"
 )
 
 type typeDescribe struct {
@@ -31,5 +32,6 @@ func createTypeDescribe(typ reflect.Type)*typeDescribe{
 		}
 	}
 	typeDescribes[typ.String()]=td
+	fmt.Println(typeDescribes)
 	return td
 }

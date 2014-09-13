@@ -21,7 +21,7 @@ func NewInjector() Injector {
 
 func (this *injector) Map(ptr interface{}, name string) Mapping {
 	typ := reflect.TypeOf(ptr)
-	return this.mapType(typ, name)
+	return this.MapByType(typ, name)
 }
 
 func (this *injector) CreateChild() Injector {
@@ -44,12 +44,9 @@ func (this *injector) GetInstance(ptr interface{}, name string) interface{} {
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
-	return this.getInstance(typ, name)
+	return this.GetInstanceByType(typ, name)
 }
 
-func (this *injector) NewInstance(ptr interface{}, name string) interface{} {
-	return this.newInstance(reflect.TypeOf(ptr), name).Interface()
-}
 func (this*injector) GetParent() Injector {
 	return this.parent
 }
@@ -58,9 +55,17 @@ func (this*injector) SetParent(i Injector) {
 }
 
 func (this*injector) HasMapping(ptr interface{}, name string, deeply bool) (b bool) {
-	return this.hasMapping(reflect.TypeOf(ptr), name, deeply)
+	return this.HasMappingOfType(reflect.TypeOf(ptr), name, deeply)
 }
-
+func (this *injector)InstantiationUnMapped(typ reflect.Type)reflect.Value{
+	v:=reflect.New(typ)
+	td:=getTypeDescribe(typ)
+	if td.hasInitMethod{
+		td.initMethod.Func.Call([]reflect.Value{v})
+	}
+	this.InjectInto(v)
+	return v
+}
 /*************************************************/
 /**private methods*/
 func (this *injector) createMapping(typ reflect.Type, name, key string) Mapping {
@@ -86,25 +91,8 @@ func (this *injector) getProvider(typ reflect.Type, name string) provider {
 	return nil
 }
 
-func (this *injector) newInstance(typ reflect.Type, name string) reflect.Value {
-	for typ.Kind() == reflect.Ptr {
-		typ = typ.Elem()
-	}
-	p := this.getProvider(typ, name)
-	if p != nil {
-		return p.apply(this)
-	}else {
-		v := reflect.New(typ)
-		td := getTypeDescribe(typ)
-		if td.hasInitMethod {
-			td.initMethod.Func.Call([]reflect.Value{v})
-		}
-		this.injectInto(v)
-		return v
-	}
-}
 
-func (this *injector) getInstance(typ reflect.Type, name string) reflect.Value {
+func (this *injector) GetInstanceByType(typ reflect.Type, name string) reflect.Value {
 	p := this.getProvider(typ, name)
 	if p != nil {
 		return p.apply(this)
@@ -114,29 +102,29 @@ func (this *injector) getInstance(typ reflect.Type, name string) reflect.Value {
 
 func (this *injector) injectInto(val reflect.Value) {
 	fmt.Println("inject into")
-	td := getTypeDescribe(val.Type())
 	for val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
+	td := getTypeDescribe(val.Type())
 	for _, v := range td.fields {
 		vField := val.FieldByIndex(v.Index)
 		if vField.CanSet() {
-			vField.Set(this.getInstance(v.Type, v.Tag.Get("inject")))
+			vField.Set(this.GetInstanceByType(v.Type, v.Tag.Get("inject")))
 		}
 	}
 	fmt.Println(td)
 
 }
 
-func (this *injector) unMap(typ reflect.Type, name string) {
-	if this.hasMapping(typ, name, false) {
+func (this *injector) UnMapByType(typ reflect.Type, name string) {
+	if this.HasMappingOfType(typ, name, false) {
 		this.Lock()
 		delete(this.providers, generateUid(typ, name))
 		this.Unlock()
 	}
 }
 
-func (this*injector) hasMapping(typ reflect.Type, name string, deeply bool) (b bool) {
+func (this*injector) HasMappingOfType(typ reflect.Type, name string, deeply bool) (b bool) {
 	i := this
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
@@ -156,7 +144,7 @@ func (this*injector) hasMapping(typ reflect.Type, name string, deeply bool) (b b
 	return
 }
 
-func (this *injector) mapType(typ reflect.Type, name string) Mapping {
+func (this *injector) MapByType(typ reflect.Type, name string) Mapping {
 	fmt.Println(typ)
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
