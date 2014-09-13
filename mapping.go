@@ -22,10 +22,10 @@ func newMapping(injector *injector, typ reflect.Type, name, uid string) *mapping
 }
 
 func (this *mapping) ToType(ptr interface{}) {
-	typ:=reflect.TypeOf(ptr)
-	if typ.Implements(this.typ){
+	typ := reflect.TypeOf(ptr)
+	if typ.Implements(this.typ) {
 		this.toType(typ)
-	}else{
+	}else {
 		panic(fmt.Sprintf("type:%s didn't implements %s", typ.String(), this.typ.String()))
 	}
 }
@@ -33,12 +33,12 @@ func (this *mapping) toType(typ reflect.Type) {
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
-	this.injector.providers[this.uid] = newTypeProvider(typ)
+	this.injector.addProvider(this.uid, newTypeProvider(typ))
 }
 func (this *mapping) ToValue(ptr interface{}) {
 	typ := reflect.TypeOf(ptr)
 	if typ.Implements(this.typ) {
-		this.injector.providers[this.uid] = newValueProvider(reflect.ValueOf(ptr))
+		this.injector.addProvider(this.uid, newValueProvider(reflect.ValueOf(ptr)))
 	}else {
 		panic(fmt.Sprintf("type:%s didn't implements %s", typ.String(), this.typ.String()))
 	}
@@ -48,8 +48,8 @@ func (this *mapping) toSingleton(typ reflect.Type) {
 		typ = typ.Elem()
 	}
 	if typ.Kind() == reflect.Struct {
-		this.injector.providers[this.uid] = newSingletonProvider(typ)
-	}else{
+		this.injector.addProvider(this.uid, newSingletonProvider(typ))
+	}else {
 		panic("only struct type can be mapped as singleton!")
 	}
 }

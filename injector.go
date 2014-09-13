@@ -11,7 +11,6 @@ type injector struct {
 	providers map[string]provider
 	sync.Mutex
 }
-
 func NewInjector() Injector {
 	i := &injector{}
 	i.Map(i,"").ToValue(i)
@@ -64,8 +63,6 @@ func (this*injector) HasMapping(ptr interface{}, name string, deeply bool) (b bo
 /*************************************************/
 /**private methods*/
 func (this *injector) createMapping(typ reflect.Type, name, key string) Mapping {
-	this.Lock()
-	defer this.Unlock()
 	if _,ok:=this.providers[key];ok{
 		panic("this mapping is already exists!")
 	}
@@ -129,7 +126,9 @@ func (this *injector) injectInto(val reflect.Value) {
 
 func (this *injector) unMap(typ reflect.Type, name string) {
 	if this.hasMapping(typ, name, false) {
+		this.Lock()
 		delete(this.providers, generateUid(typ, name))
+		this.Unlock()
 	}
 }
 
@@ -139,8 +138,6 @@ func (this*injector) hasMapping(typ reflect.Type, name string, deeply bool) (b b
 		typ = typ.Elem()
 	}
 	b = false
-	this.Lock()
-	defer this.Unlock()
 	for i != nil {
 		_, b = i.providers[generateUid(typ, name)]
 		if deeply {
