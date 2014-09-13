@@ -13,9 +13,10 @@ type injector struct {
 }
 
 func NewInjector() Injector {
-	i := injector{}
+	i := &injector{}
+	i.Map(i,"").ToValue(i)
 	i.providers = make(map[string]provider,64)
-	return &i
+	return i
 }
 
 func (this *injector) Map(ptr interface{}, name string) Mapping {
@@ -161,6 +162,13 @@ func (this *injector) mapType(typ reflect.Type, name string) Mapping {
 	}
 	mappingKey := generateUid(typ, name)
 	return this.createMapping(typ, name, mappingKey)
+}
+func (this *injector)addProvider(uid string,p provider){
+	this.Lock()
+	if _,ok:=this.providers[uid];!ok{
+		this.providers[uid]=p
+	}
+	this.Unlock()
 }
 /****************************************************/
 func generateUid(typ reflect.Type, name string) string {
