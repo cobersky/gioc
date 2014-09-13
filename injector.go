@@ -44,7 +44,7 @@ func (this *injector) GetInstance(ptr interface{}, name string) interface{} {
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
-	return this.GetInstanceByType(typ, name)
+	return this.GetInstanceByType(typ, name).Interface()
 }
 
 func (this*injector) GetParent() Injector {
