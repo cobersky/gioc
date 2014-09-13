@@ -11,10 +11,11 @@ type injector struct {
 	providers map[string]provider
 	sync.Mutex
 }
+
 func NewInjector() Injector {
 	i := &injector{}
-	i.Map(i,"").ToValue(i)
-	i.providers = make(map[string]provider,64)
+	i.providers = make(map[string]provider, 64)
+	i.Map(new(Injector), "").ToValue(i)
 	return i
 }
 
@@ -63,7 +64,7 @@ func (this*injector) HasMapping(ptr interface{}, name string, deeply bool) (b bo
 /*************************************************/
 /**private methods*/
 func (this *injector) createMapping(typ reflect.Type, name, key string) Mapping {
-	if _,ok:=this.providers[key];ok{
+	if _, ok := this.providers[key]; ok {
 		panic("this mapping is already exists!")
 	}
 	mp := newMapping(this, typ, name, key)
@@ -108,19 +109,20 @@ func (this *injector) getInstance(typ reflect.Type, name string) reflect.Value {
 }
 
 func (this *injector) injectInto(val reflect.Value) {
+	fmt.Println("inject into")
 	for val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 	typ := val.Type()
-	for i := 0; i < typ.NumField(); i++ {
-		tField := typ.Field(i)
-		name := tField.Tag.Get("inject")
-		if len(name) > 0 {
-			vField := val.Field(i)
-			if vField.CanSet() {
-				vField.Set(this.getInstance(tField.Type, name))
-			}
+	td := getTypeDescribe(typ)
+	for _, v := range td.fields {
+		vField := val.FieldByIndex(v.Index)
+		if vField.CanSet() {
+			vField.Set(this.getInstance(v.Type, v.Tag.Get("inject")))
 		}
+	}
+	if td.hasInitMethod {
+		fmt.Println(td.initMethod.PkgPath)
 	}
 }
 
@@ -160,13 +162,14 @@ func (this *injector) mapType(typ reflect.Type, name string) Mapping {
 	mappingKey := generateUid(typ, name)
 	return this.createMapping(typ, name, mappingKey)
 }
-func (this *injector)addProvider(uid string,p provider){
+func (this *injector) addProvider(uid string, p provider) {
 	this.Lock()
-	if _,ok:=this.providers[uid];!ok{
-		this.providers[uid]=p
+	if _, ok := this.providers[uid]; !ok {
+		this.providers[uid] = p
 	}
 	this.Unlock()
 }
+
 /****************************************************/
 func generateUid(typ reflect.Type, name string) string {
 	if len(name) > 0 {
