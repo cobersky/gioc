@@ -3,7 +3,6 @@ package gioc
 import (
 	"reflect"
 	"sync"
-	"fmt"
 )
 
 type injector struct {
@@ -101,7 +100,6 @@ func (this *injector) GetInstanceByType(typ reflect.Type, name string) reflect.V
 }
 
 func (this *injector) injectInto(val reflect.Value) {
-	fmt.Println(val.Type())
 	td := getTypeDescribe(val.Type())
 	for val.Kind() == reflect.Ptr {
 		val = val.Elem()
