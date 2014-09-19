@@ -1,6 +1,9 @@
 package gioc
 
-import "reflect"
+import (
+	"reflect"
+	"fmt"
+)
 
 type provider interface {
 	apply(*injector)reflect.Value
@@ -57,7 +60,8 @@ func newSingletonProvider (typ reflect.Type)provider{
 func (this *singletonProvider)apply(i *injector)reflect.Value{
 	if !this.value.IsValid(){
 		this.value=reflect.New(this.typ)
-		td:=getTypeDescribe(this.typ)
+		td:=getTypeDescribe(reflect.PtrTo(this.typ))
+		fmt.Println(td.hasInitMethod,td.initMethod)
 		if td.hasInitMethod{
 			td.initMethod.Func.Call([]reflect.Value{this.value})
 		}

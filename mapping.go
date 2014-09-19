@@ -33,7 +33,6 @@ func (this *mapping) toType(typ reflect.Type) {
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
-	createTypeDescribe(typ)
 	this.injector.addProvider(this.uid, newTypeProvider(typ))
 }
 func (this *mapping) ToValue(ptr interface{}) {
@@ -42,7 +41,6 @@ func (this *mapping) ToValue(ptr interface{}) {
 		for typ.Kind()==reflect.Ptr{
 			typ=typ.Elem()
 		}
-		createTypeDescribe(typ)
 		this.injector.addProvider(this.uid, newValueProvider(reflect.ValueOf(ptr)))
 	}else {
 		panic(fmt.Sprintf("type:%s didn't implements %s", typ.String(), this.typ.String()))
@@ -53,7 +51,6 @@ func (this *mapping) toSingleton(typ reflect.Type) {
 		typ = typ.Elem()
 	}
 	if typ.Kind() == reflect.Struct {
-		createTypeDescribe(typ)
 		this.injector.addProvider(this.uid, newSingletonProvider(typ))
 	}else {
 		panic("only struct type can be mapped as singleton!")

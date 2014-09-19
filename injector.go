@@ -2,8 +2,8 @@ package gioc
 
 import (
 	"reflect"
-	"fmt"
 	"sync"
+	"fmt"
 )
 
 type injector struct {
@@ -59,7 +59,7 @@ func (this*injector) HasMapping(ptr interface{}, name string, deeply bool) (b bo
 }
 func (this *injector)InstantiationUnMapped(typ reflect.Type)reflect.Value{
 	v:=reflect.New(typ)
-	td:=getTypeDescribe(typ)
+	td:=getTypeDescribe(reflect.PtrTo(typ))
 	if td.hasInitMethod{
 		td.initMethod.Func.Call([]reflect.Value{v})
 	}
@@ -101,19 +101,17 @@ func (this *injector) GetInstanceByType(typ reflect.Type, name string) reflect.V
 }
 
 func (this *injector) injectInto(val reflect.Value) {
-	fmt.Println("inject into")
+	fmt.Println(val.Type())
+	td := getTypeDescribe(val.Type())
 	for val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	td := getTypeDescribe(val.Type())
 	for _, v := range td.fields {
 		vField := val.FieldByIndex(v.Index)
 		if vField.CanSet() {
 			vField.Set(this.GetInstanceByType(v.Type, v.Tag.Get("inject")))
 		}
 	}
-	fmt.Println(td)
-
 }
 
 func (this *injector) UnMapByType(typ reflect.Type, name string) {
@@ -145,7 +143,6 @@ func (this*injector) HasMappingOfType(typ reflect.Type, name string, deeply bool
 }
 
 func (this *injector) MapByType(typ reflect.Type, name string) Mapping {
-	fmt.Println(typ)
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
