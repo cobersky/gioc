@@ -58,10 +58,6 @@ func (this*injector) HasMapping(ptr interface{}, name string, deeply bool) (b bo
 }
 func (this *injector)InstantiationUnMapped(typ reflect.Type)reflect.Value{
 	v:=reflect.New(typ)
-	td:=getTypeDescribe(reflect.PtrTo(typ))
-	if td.hasInitMethod{
-		td.initMethod.Func.Call([]reflect.Value{v})
-	}
 	this.InjectInto(v)
 	return v
 }
@@ -109,6 +105,9 @@ func (this *injector) injectInto(val reflect.Value) {
 		if vField.CanSet() {
 			vField.Set(this.GetInstanceByType(v.Type, v.Tag.Get("inject")))
 		}
+	}
+	if td.hasInitMethod{
+		td.initMethod.Func.Call([]reflect.Value{val.Addr()})
 	}
 }
 

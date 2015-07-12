@@ -2,7 +2,6 @@ package gioc
 
 import (
 	"reflect"
-	"fmt"
 )
 
 type typeDescribe struct {
@@ -20,7 +19,7 @@ func getTypeDescribe(typ reflect.Type)*typeDescribe{
 }
 func createTypeDescribe(typ reflect.Type)*typeDescribe{
 	td:=&typeDescribe{}
-	td.initMethod,td.hasInitMethod=typ.MethodByName("Init")
+	td.initMethod,td.hasInitMethod=typ.MethodByName("PostConstruct")
 	for typ.Kind()==reflect.Ptr{
 		typ=typ.Elem()
 	}
@@ -32,6 +31,5 @@ func createTypeDescribe(typ reflect.Type)*typeDescribe{
 		}
 	}
 	typeDescribes[typ.String()]=td
-	fmt.Println(typeDescribes)
 	return td
 }
