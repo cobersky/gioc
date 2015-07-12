@@ -18,10 +18,6 @@ func newTypeProvider(typ reflect.Type)provider{
 }
 func (this *typeProvider)apply(i *injector)reflect.Value{
 	v:=reflect.New(this.typ)
-	td:=getTypeDescribe(this.typ)
-	if td.hasInitMethod{
-		td.initMethod.Func.Call([]reflect.Value{v})
-	}
 	i.injectInto(v)
 	return v
 }
